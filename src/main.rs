@@ -1,13 +1,17 @@
 use std::{
-    char,
-    collections::HashMap,
+    char, cmp,
     fs::{self, File},
     io,
     path::Path,
 };
+use std::{
+    collections::HashMap,
+    fmt::{self, Display},
+};
 
 fn main() -> anyhow::Result<()> {
-    day_one()
+    day_one()?;
+    day_two()
 }
 
 fn day_one() -> anyhow::Result<()> {
@@ -57,6 +61,68 @@ fn day_one() -> anyhow::Result<()> {
     }
     println!("Answer [1][**]: {}", result);
 
+    Ok(())
+}
+
+fn day_two() -> anyhow::Result<()> {
+    let lines = read_lines("resources/two.txt")?;
+
+    let red_limit = 12;
+    let green_limit = 13;
+    let blue_limit = 14;
+
+    let mut answer_part_one: usize = 0;
+    let mut answer_part_two: usize = 0;
+
+    for game_line in lines {
+        let game_line = game_line?;
+
+        let split: Vec<&str> = game_line.split(':').collect();
+
+        let game_id = split[0]
+            .chars()
+            .filter(char::is_ascii_digit)
+            .collect::<String>()
+            .parse::<usize>()?;
+
+        let sets: Vec<&str> = split[1].split(';').collect();
+        let mut valid_game: bool = true;
+        let mut min_rgb: [usize; 3] = [0, 0, 0];
+
+        'set_loop: for set in sets {
+            let colors: Vec<&str> = set.split(',').collect();
+
+            for color in colors {
+                let color_pair: Vec<&str> = color.trim().split(' ').collect();
+                let count = color_pair[0].parse::<usize>()?;
+                let color = color_pair[1];
+
+                if valid_game {
+                    valid_game = match color {
+                        "red" => count <= red_limit,
+                        "green" => count <= green_limit,
+                        "blue" => count <= blue_limit,
+                        _ => false,
+                    };
+                }
+
+                match color {
+                    "red" => min_rgb[0] = cmp::max(min_rgb[0], count),
+                    "green" => min_rgb[1] = cmp::max(min_rgb[1], count),
+                    "blue" => min_rgb[2] = cmp::max(min_rgb[2], count),
+                    _ => (),
+                };
+            }
+        }
+
+        if valid_game {
+            answer_part_one += game_id;
+        }
+
+        answer_part_two += min_rgb[0] * min_rgb[1] * min_rgb[2];
+    }
+    println!("Answer [2][*]: {}", answer_part_one);
+    println!("Answer [2][**]: {}", answer_part_two);
     Ok(())
 }
 
